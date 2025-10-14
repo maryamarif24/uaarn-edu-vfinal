@@ -3,6 +3,7 @@ import Link from "next/link";
 import FeatureCard from "./components/FeatureCard";
 import ContactPage from "./contact/page";
 import CoursesPage from "./courses/page";
+import AboutPage from "./about/page";
 
 export default function HomePage() {
   return (
@@ -33,11 +34,13 @@ export default function HomePage() {
         </div>
       </section>
 
+      <AboutPage />
+
       {/* Features Section */}
       <section className="bg-white py-16 px-8 border-t border-slate-200">
         <div className="max-w-6xl mx-auto text-center">
-          <h3 className="text-3xl font-semibold mb-10 text-slate-900">
-            Why Choose UAARN?
+          <h3 className="text-4xl font-semibold mb-10 text-slate-900">
+            Why Choose <span className="text-blue-700">UAARN</span>?
           </h3>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <FeatureCard
