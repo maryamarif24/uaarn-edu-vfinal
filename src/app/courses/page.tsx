@@ -4,6 +4,7 @@ import CourseCard from "../components/CourseCard";
 export default function CoursesPage() {
   const courses = [
     {
+      id: "graphics-designing",
       title: "Graphics Designing",
       platform: "Youtube",
       image:
@@ -11,13 +12,15 @@ export default function CoursesPage() {
       link: "https://www.youtube.com/playlist?list=PLK1_9VA534IhRtQJYOtvN92Kb6T6vim7I",
     },
     {
-    title: "Python for Beginners",
-    platform: "Youtube",
-    image:
-      "https://media.brightdata.com/2025/03/Data-Analysis-With-Python.svg",
-    link: "https://youtu.be/UrsmFxEIp5k",
+      id: "python-beginners",
+      title: "Python for Beginners",
+      platform: "Youtube",
+      image:
+        "https://media.brightdata.com/2025/03/Data-Analysis-With-Python.svg",
+      link: "https://youtu.be/UrsmFxEIp5k",
     },
     {
+      id: "digital-marketing",
       title: "Digital Marketing",
       platform: "Youtube",
       image:
@@ -39,8 +42,8 @@ export default function CoursesPage() {
       </div>
 
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-        {courses.map((course, index) => (
-          <CourseCard key={index} {...course} />
+        {courses.map((course) => (
+          <CourseCard key={course.id} {...course} />
         ))}
       </div>
     </div>

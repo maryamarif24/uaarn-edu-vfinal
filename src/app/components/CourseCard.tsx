@@ -13,7 +13,6 @@ export default function CourseCard({
   title,
   platform,
   image,
-  link,
 }: CourseCardProps) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition overflow-hidden">
@@ -28,21 +27,17 @@ export default function CourseCard({
       <div className="p-6 text-left">
         <h3 className="text-xl font-semibold text-slate-800 mb-2">{title}</h3>
         <p className="text-slate-500 mb-4">{platform}</p>
-        <div className="flex justify-between">
-          <a
-            href={link}
-            target="_blank"
-            className="text-blue-600 font-medium hover:underline"
-          >
-            View Course
-          </a>
-          <Link
-            href={`/summarize?link=${encodeURIComponent(link)}`}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
-            >
-            Summarize
-        </Link>
-        </div>
+        <div className="flex justify-center">
+  <Link
+    href={`/courses/${encodeURIComponent(
+      title.toLowerCase().replace(/\s+/g, "-")
+    )}`}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition"
+  >
+    View Details
+  </Link>
+</div>
+
       </div>
     </div>
   );

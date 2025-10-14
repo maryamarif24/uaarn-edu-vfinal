@@ -2,8 +2,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
+  const { isSignedIn } = useUser();
   const [open, setOpen] = useState(false);
 
   return (
@@ -13,9 +15,9 @@ export default function Navbar() {
       {/* Desktop Menu */}
       <div className="hidden md:flex space-x-6 text-slate-700 font-medium">
         <Link href="/" className="hover:text-blue-600">Home</Link>
-        <Link href="/ask" className="hover:text-blue-600">Ask AI</Link>
-        <Link href="/courses" className="hover:text-blue-600">Courses</Link>
         <Link href="/about" className="hover:text-blue-600">About</Link>
+        <Link href="/courses" className="hover:text-blue-600">Courses</Link>
+        <Link href="/ask" className="hover:text-blue-600">Ask AI</Link>
         <Link href="/contact" className="hover:text-blue-600">Contact</Link>
       </div>
 
@@ -37,6 +39,7 @@ export default function Navbar() {
           <Link href="/contact" className="hover:text-blue-600" onClick={() => setOpen(false)}>Contact</Link>
         </div>
       )}
+      {isSignedIn ? <UserButton /> : <SignInButton />}
     </nav>
   );
 }
