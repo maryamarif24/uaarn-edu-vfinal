@@ -1,39 +1,53 @@
 "use client";
-import { useState } from "react";
 
-export default function ContactPage() {
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
-  const [loading, setLoading] = useState(false);
+import React, { useState, ChangeEvent, FormEvent } from "react";
+
+export default function ContactForm() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
     setSuccess(false);
+    setError(null);
 
     try {
-      // send data to backend API route
-      const res = await fetch("/api/contact", {
+      const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          access_key: "fc3dea13-38da-4a57-a917-372d7f3089d6",
+          ...formData
+        }),
       });
 
-      if (!res.ok) throw new Error("Failed to send message");
-      setSuccess(true);
-      setForm({ name: "", email: "", message: "" });
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
+      const result = await response.json();
+      if (result.success) {
+        setSuccess(true);
+        setFormData({ name: "", email: "", message: "" });
       } else {
-        setError("An unexpected error occurred");
+        setError("Failed to send message. Please try again.");
       }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  }
+  };
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-16">
@@ -61,34 +75,37 @@ export default function ContactPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <input
                 type="text"
+                name="name"
                 placeholder="Your Name"
                 className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                value={formData.name}
+                onChange={handleChange}
                 required
               />
               <input
                 type="email"
+                name="email"
                 placeholder="Your Email"
                 className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                value={formData.email}
+                onChange={handleChange}
                 required
               />
               <textarea
+                name="message"
                 placeholder="Your Message"
                 rows={5}
                 className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                value={form.message}
-                onChange={(e) => setForm({ ...form, message: e.target.value })}
+                value={formData.message}
+                onChange={handleChange}
                 required
               />
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isSubmitting}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
               >
-                {loading ? "Sending..." : "Send Message"}
+                {isSubmitting ? "Sending..." : "Send Message"}
               </button>
             </form>
 
