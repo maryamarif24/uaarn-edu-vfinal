@@ -37,7 +37,7 @@ export default function AskPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 flex flex-col items-center py-6 px-4 sm:px-6">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-6 px-4 sm:px-6">
       <div className="w-full max-w-5xl bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-[80vh]">
         {/* Header */}
         <div className="border-b border-slate-200 px-6 py-4 flex justify-between items-center">

@@ -37,7 +37,7 @@ export default function HomePage() {
       <AboutPage />
 
       {/* Features Section */}
-      <section className="bg-white py-16 px-8 border-t border-slate-200">
+      <section className="bg-slate- py-16 px-8 border-t border-slate-200">
         <div className="max-w-6xl mx-auto text-center">
           <h3 className="text-4xl font-semibold mb-10 text-slate-900">
             Why Choose <span className="text-blue-700">UAARN</span>?

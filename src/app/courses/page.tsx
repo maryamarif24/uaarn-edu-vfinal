@@ -1,36 +1,46 @@
 "use client";
+
+import { useEffect, useState } from "react";
 import CourseCard from "../components/CourseCard";
+import { client } from "@/sanity/lib/client";
+
+interface Course {
+  _id: string;
+  title: string;
+  platform: string;
+  image: string;
+  link: string;
+}
 
 export default function CoursesPage() {
-  const courses = [
-    {
-      id: "graphics-designing",
-      title: "Graphics Designing",
-      platform: "Youtube",
-      image:
-        "https://static.vecteezy.com/system/resources/thumbnails/038/940/906/small_2x/ai-generated-graphic-design-workspace-with-colorful-illustration-photo.jpeg",
-      link: "https://www.youtube.com/playlist?list=PLK1_9VA534IhRtQJYOtvN92Kb6T6vim7I",
-    },
-    {
-      id: "python-beginners",
-      title: "Python for Beginners",
-      platform: "Youtube",
-      image:
-        "https://media.brightdata.com/2025/03/Data-Analysis-With-Python.svg",
-      link: "https://youtu.be/UrsmFxEIp5k",
-    },
-    {
-      id: "digital-marketing",
-      title: "Digital Marketing",
-      platform: "Youtube",
-      image:
-        "https://media.istockphoto.com/id/1334591614/photo/man-using-digital-tablet-online-connect-to-internet-banking-currency-exchange-online-shopping.jpg?s=612x612&w=0&k=20&c=nejA5SuHcN2fAdO7Bkaf9pJrwzyLPBCyOLZgMaslGko=",
-      link: "https://youtu.be/XuUbLHIRyuM",
-    },
-  ];
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const data = await client.fetch(`
+          *[_type == "course"]{
+            _id,
+            title,
+            platform,
+            "image": image.asset->url,
+            link
+          } | order(_createdAt desc)
+        `);
+        setCourses(data);
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 py-20 px-8">
+    <div className="min-h-screen bg-slate-50 py-20 px-8">
       <div className="max-w-6xl mx-auto text-center mb-12">
         <h2 className="text-4xl font-bold text-slate-900">
           Explore <span className="text-blue-600">Top Courses</span>
@@ -41,11 +51,25 @@ export default function CoursesPage() {
         </p>
       </div>
 
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-        {courses.map((course) => (
-          <CourseCard key={course.id} {...course} />
-        ))}
-      </div>
+      {loading ? (
+        <p className="text-center text-slate-500">Loading courses...</p>
+      ) : courses.length === 0 ? (
+        <p className="text-center text-slate-500">
+          No courses added yet. Please check back soon.
+        </p>
+      ) : (
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+          {courses.map((course) => (
+            <CourseCard
+              key={course._id}
+              title={course.title}
+              platform={course.platform}
+              image={course.image}
+              link={course.link}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

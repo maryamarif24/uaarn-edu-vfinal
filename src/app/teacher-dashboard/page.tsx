@@ -1,127 +1,94 @@
-"use client";
-import { useState } from "react";
-import { BarChart2, BookOpen, ClipboardList, LogOut, Users } from "lucide-react";
+import Image from "next/image";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { BookOpen, FileUp, Brain } from "lucide-react";
+import Link from "next/link";
 
-export default function TeacherDashboard() {
-  const [activeTab, setActiveTab] = useState("overview");
+export default async function TeacherDashboard() {
+  const user = await currentUser();
+
+  if (!user) {
+    redirect(`/sign-in?redirect_url=/teacher-dashboard`);
+  }
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 p-6 flex flex-col">
-        <h1 className="text-2xl font-bold text-blue-600 mb-8">UAARN</h1>
-
-        <nav className="flex flex-col gap-4 text-slate-700">
-          <button
-            onClick={() => setActiveTab("overview")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              activeTab === "overview"
-                ? "bg-blue-100 text-blue-700 font-medium"
-                : "hover:bg-slate-100"
-            }`}
-          >
-            <BarChart2 size={18} /> Overview
-          </button>
-          <button
-            onClick={() => setActiveTab("courses")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              activeTab === "courses"
-                ? "bg-blue-100 text-blue-700 font-medium"
-                : "hover:bg-slate-100"
-            }`}
-          >
-            <BookOpen size={18} /> Courses
-          </button>
-          <button
-            onClick={() => setActiveTab("quizzes")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              activeTab === "quizzes"
-                ? "bg-blue-100 text-blue-700 font-medium"
-                : "hover:bg-slate-100"
-            }`}
-          >
-            <ClipboardList size={18} /> Quizzes
-          </button>
-          <button
-            onClick={() => setActiveTab("students")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              activeTab === "students"
-                ? "bg-blue-100 text-blue-700 font-medium"
-                : "hover:bg-slate-100"
-            }`}
-          >
-            <Users size={18} /> Students
-          </button>
-        </nav>
-
-        <div className="mt-auto">
-          <button className="flex items-center gap-2 text-slate-500 hover:text-red-600 mt-6 px-4 py-2">
-            <LogOut size={18} /> Logout
-          </button>
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-100 flex items-center justify-center p-6">
+      <div className="bg-white/90 backdrop-blur-md border border-slate-200 shadow-xl rounded-2xl p-8 w-full max-w-5xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">
+              Welcome, {user.firstName}! 👋
+            </h1>
+            <p className="text-slate-500 mt-1">
+              Manage your courses, notes, and quizzes for your students.
+            </p>
+          </div>
+          <Image
+            src={user.imageUrl || "/default-avatar.png"}
+            alt="Teacher avatar"
+            width={56}
+            height={56}
+            className="w-14 h-14 rounded-full border border-slate-300 shadow-sm"
+            priority
+            unoptimized
+          />
         </div>
-      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        {activeTab === "overview" && (
-          <section>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
-              Dashboard Overview
+        {/* Dashboard Cards */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Add Course Card */}
+          <Link
+            href="/teacher-dashboard/add-course"
+            className="group bg-white border border-slate-200 rounded-xl p-6 shadow hover:shadow-lg transition block"
+          >
+            <BookOpen className="w-10 h-10 text-indigo-500 mb-3" />
+            <h2 className="text-lg font-semibold text-slate-800 mb-2">
+              Add Course
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 className="text-slate-500 text-sm">Total Students</h3>
-                <p className="text-2xl font-bold text-blue-600 mt-1">152</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 className="text-slate-500 text-sm">Active Courses</h3>
-                <p className="text-2xl font-bold text-blue-600 mt-1">8</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 className="text-slate-500 text-sm">Quizzes Created</h3>
-                <p className="text-2xl font-bold text-blue-600 mt-1">23</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 className="text-slate-500 text-sm">Average Score</h3>
-                <p className="text-2xl font-bold text-blue-600 mt-1">84%</p>
-              </div>
-            </div>
-          </section>
-        )}
+            <p className="text-slate-500 mb-3">
+              Create a new course and share it with your students.
+            </p>
+            <span className="text-indigo-600 font-medium group-hover:underline">
+              Add New Course →
+            </span>
+          </Link>
 
-        {activeTab === "courses" && (
-          <section>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
-              Manage Courses
+          {/* Upload Notes Card */}
+          <Link
+            href="/teacher-dashboard/upload-notes"
+            className="group bg-white border border-slate-200 rounded-xl p-6 shadow hover:shadow-lg transition block"
+          >
+            <FileUp className="w-10 h-10 text-indigo-500 mb-3" />
+            <h2 className="text-lg font-semibold text-slate-800 mb-2">
+              Upload Notes
             </h2>
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-              <p className="text-slate-600">List of courses will appear here.</p>
-            </div>
-          </section>
-        )}
+            <p className="text-slate-500 mb-3">
+              Upload PDF, Word, or image notes for your classes.
+            </p>
+            <span className="text-indigo-600 font-medium group-hover:underline">
+              Upload Notes →
+            </span>
+          </Link>
 
-        {activeTab === "quizzes" && (
-          <section>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
-              Manage Quizzes
+          {/* Generate Quiz Card */}
+          <Link
+            href="/quiz"
+            className="group bg-white border border-slate-200 rounded-xl p-6 shadow hover:shadow-lg transition block"
+          >
+            <Brain className="w-10 h-10 text-indigo-500 mb-3" />
+            <h2 className="text-lg font-semibold text-slate-800 mb-2">
+              Generate Quiz
             </h2>
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-              <p className="text-slate-600">Create or view quizzes here.</p>
-            </div>
-          </section>
-        )}
-
-        {activeTab === "students" && (
-          <section>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
-              Students List
-            </h2>
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-              <p className="text-slate-600">Student details will appear here.</p>
-            </div>
-          </section>
-        )}
-      </main>
-    </div>
+            <p className="text-slate-500 mb-3">
+              Automatically create quizzes for your courses using AI.
+            </p>
+            <span className="text-indigo-600 font-medium group-hover:underline">
+              Generate Quiz →
+            </span>
+          </Link>
+        </div>
+      </div>
+    </main>
   );
 }
