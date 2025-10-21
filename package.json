@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.33.3",
+    "@sanity/client": "^7.11.2",
     "@sanity/image-url": "^1.2.0",
     "@sanity/vision": "^4.10.3",
     "firebase": "^12.4.0",

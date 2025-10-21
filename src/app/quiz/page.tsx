@@ -17,6 +17,9 @@ export default function QuizPage() {
   const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
 
+    const BACKEND_URL = "http://127.0.0.1:8000";
+
+
   const handleSend = async () => {
     if (!topic.trim()) return;
 
@@ -25,35 +28,32 @@ export default function QuizPage() {
     setTopic("");
     setLoading(true);
 
-    // Simulate AI-generated quiz (replace later with real API)
-    setTimeout(() => {
-      const quiz = [
-        {
-          question: `What is ${userMsg.content} mainly about?`,
-          options: [
-            "A random concept",
-            "A mathematical principle",
-            "A scientific theory",
-            "A historical event",
-          ],
-          answer: "A scientific theory",
-        },
-        {
-          question: `Which of the following best describes ${userMsg.content}?`,
-          options: [
-            "An art form",
-            "A method of problem-solving",
-            "A programming language",
-            "A biological process",
-          ],
-          answer: "A method of problem-solving",
-        },
-      ];
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/quiz`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ topic }),
+});
 
-      const aiMsg = { role: "ai" as const, content: quiz };
+      const data = await res.json();
+
+      let quizData: Quiz[] = [];
+
+      try {
+        quizData = JSON.parse(data.quiz);
+      } catch (err) {
+        console.error("Invalid JSON from backend:", err);
+        throw new Error("Invalid JSON format from AI");
+      }
+
+      const aiMsg = { role: "ai" as const, content: quizData };
       setMessages((prev) => [...prev, aiMsg]);
+    } catch (error) {
+      console.error("Error fetching quiz:", error);
+      alert(" Error generating quiz. Check backend logs.");
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -90,7 +90,7 @@ export default function QuizPage() {
               }`}
             >
               <div
-                className={`max-w-[85%]  rounded-2xl text-sm leading-relaxed ${
+                className={`max-w-[85%] rounded-2xl text-sm leading-relaxed ${
                   msg.role === "user"
                     ? "bg-blue-600 text-white rounded-br-none px-4 py-3"
                     : "bg-slate-100 text-slate-800 rounded-bl-none"
@@ -126,6 +126,9 @@ export default function QuizPage() {
                               </li>
                             ))}
                           </ul>
+                          <p className="text-xs text-slate-500 mt-2">
+                            ✅ Correct Answer: <b>{q.answer}</b>
+                          </p>
                         </div>
                       )
                     )}

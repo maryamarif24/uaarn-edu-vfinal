@@ -5,14 +5,43 @@ export default function AskUAARN() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleAsk = async () => {
     if (!question.trim()) return;
     setLoading(true);
-    setTimeout(() => {
-      setAnswer("✨ This is a sample AI-generated response preview.");
-      setLoading(false);
-    }, 1200);
+    setError("");
+    setAnswer("");
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": "mehak-demo-user", // 🔐 demo header — production me Clerk/Auth use karo
+        },
+        body: JSON.stringify({ message: question }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.detail || "Something went wrong");
+      } else {
+        const data = await res.json();
+        // redirect_to => agar paid agent trigger ho to
+        if (data.redirected_to) {
+          setAnswer(
+            `⚠️ This question requires a Pro Agent. Visit: ${data.redirected_to}`
+          );
+        } else {
+          setAnswer(data.reply);
+        }
+      }
+    } catch (err: any) {
+      setError("❌ Network error. Please check your server.");
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -36,9 +65,17 @@ export default function AskUAARN() {
           {loading ? "Thinking..." : "Ask"}
         </button>
 
-        {answer && (
+        {error && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {error}
+          </div>
+        )}
+
+        {answer && !error && (
           <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-lg text-left">
-            <p className="text-slate-700 leading-relaxed">{answer}</p>
+            <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+              {answer}
+            </p>
           </div>
         )}
       </div>

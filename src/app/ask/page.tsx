@@ -9,6 +9,11 @@ export default function AskPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const BACKEND_URL = "http://127.0.0.1:8000";
+
+  const USER_ID = "demo-user";
+  const USER_NAME = ""; 
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -17,16 +22,38 @@ export default function AskPage() {
     setInput("");
     setLoading(true);
 
-    // Simulate AI response (replace this later with Gemini API)
-    setTimeout(() => {
-      const aiMsg = {
-        role: "ai" as const,
-        content:
-          "💡 Here's a quick summary: this is a sample AI-generated answer preview.",
-      };
-      setMessages((prev) => [...prev, aiMsg]);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": USER_ID,
+          "x-user-name": USER_NAME, 
+        },
+        body: JSON.stringify({ message: input }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        setMessages((prev) => [
+          ...prev,
+          { role: "ai", content: `❌ Error: ${err.detail}` },
+        ]);
+      } else {
+        const data = await res.json();
+        setMessages((prev) => [
+          ...prev,
+          { role: "ai", content: data.reply },
+        ]);
+      }
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "ai", content: "⚠️ Network error. Please try again." },
+      ]);
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -39,13 +66,13 @@ export default function AskPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center py-6 px-4 sm:px-6">
       <div className="w-full max-w-5xl bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-[80vh]">
-        {/* Header */}
         <div className="border-b border-slate-200 px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-slate-800">Ask UAARN 🤖</h2>
-          <span className="text-sm text-slate-500">Your AI Study Companion</span>
+          <span className="text-sm text-slate-500">
+            Your AI Study Companion
+          </span>
         </div>
 
-        {/* Chat Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {messages.length === 0 && (
             <p className="text-center text-slate-400 mt-10">
@@ -81,7 +108,6 @@ export default function AskPage() {
           )}
         </div>
 
-        {/* Input Area */}
         <div className="border-t border-slate-200 px-6 py-4 flex items-center gap-3">
           <input
             type="text"

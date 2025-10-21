@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -13,12 +12,16 @@ export default function SummarizePage() {
   const [source, setSource] = useState<"youtube" | "text" | "upload">("youtube");
   const [link, setLink] = useState(prefilledLink);
   const [text, setText] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // ✅ Redirect to sign-in if user not logged in
+  const BACKEND_URL = "http://127.0.0.1:8000";
+
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       router.push("/sign-in");
@@ -32,56 +35,103 @@ export default function SummarizePage() {
     }
   }, [prefilledLink]);
 
-  // wait until Clerk fully loads
   if (!isLoaded) return <div className="text-center mt-20 text-slate-500">Loading...</div>;
-
-  // if not signed in, show Clerk’s built-in redirect
   if (!isSignedIn) return <RedirectToSignIn />;
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
+    setFile(f);
     setFileName(f.name);
-    const reader = new FileReader();
-    reader.onload = () => setText(String(reader.result ?? ""));
-    reader.readAsText(f);
   }
 
   async function handleSummarize() {
     setError(null);
     setSummary(null);
 
-    if (source === "youtube" && !link.trim()) {
-      setError("Please provide a YouTube video link.");
-      return;
-    }
-    if (source === "text" && !text.trim()) {
-      setError("Please paste the text you want summarized.");
-      return;
-    }
-    if (source === "upload" && !fileName) {
-      setError("Please upload a transcript file (PDF, DOCX, or TXT).");
-      return;
-    }
+    try {
+      setLoading(true);
+      let response;
 
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
+      if (source === "youtube" || source === "text") {
+        const payload = {
+          source: source,
+          link: source === "youtube" ? link : null,
+          text: source === "text" ? text : null,
+        };
+        response = await fetch(`${BACKEND_URL}/api/agent/summarize`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
 
-    const mocked =
-      source === "youtube"
-        ? `🎥 **YouTube Summary:**  
-• Core topics explained in the video.  
-• Covers AI fundamentals and applications.  
-• Tips: note key timestamps and revisit complex terms.`
-        : `🧾 **Summary from ${
-            source === "upload" ? fileName : "pasted text"
-          }:**  
-• Main idea: ${truncate(text, 120)}  
-• Key points: Example 1, Example 2, Example 3.  
-• Recommendation: Revise and test your understanding with practice questions.`;
+      if (source === "upload" && file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        response = await fetch(`${BACKEND_URL}/api/agent/upload`, {
+          method: "POST",
+          body: formData,
+        });
+      }
 
-    setSummary(mocked);
-    setLoading(false);
+      if (!response) throw new Error("No response from server");
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Summarization failed");
+      }
+
+      const data = await response.json();
+      setSummary(data.output);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDownload(format: "txt" | "pdf") {
+    if (!summary) return;
+    const response = await fetch(`${BACKEND_URL}/api/agent/download/${format}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: summary }),
+    });
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `summary.${format}`;
+    a.click();
+  }
+
+  async function handleTTS() {
+    if (!summary) return;
+    const response = await fetch(`${BACKEND_URL}/api/agent/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: summary }),
+    });
+    const blob = await response.blob();
+    const audioUrl = URL.createObjectURL(blob);
+    const audio = new Audio(audioUrl);
+    audioRef.current = audio;
+    setIsPlaying(true);
+    audio.play();
+
+    audio.onended = () => {
+      setIsPlaying(false);
+      audioRef.current = null;
+    };
+  }
+
+  function handleStopTTS() {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+      setIsPlaying(false);
+    }
   }
 
   return (
@@ -152,7 +202,7 @@ export default function SummarizePage() {
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center gap-3 flex-wrap">
           <button
             onClick={handleSummarize}
             disabled={loading}
@@ -161,13 +211,48 @@ export default function SummarizePage() {
             {loading ? "Summarizing..." : "✨ Summarize"}
           </button>
 
+          {summary && (
+            <>
+              {!isPlaying && (
+                <button
+                  onClick={handleTTS}
+                  className="px-5 py-2.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition font-medium"
+                >
+                  🔊 Listen
+                </button>
+              )}
+              {isPlaying && (
+                <button
+                  onClick={handleStopTTS}
+                  className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition font-medium"
+                >
+                  🛑 Stop
+                </button>
+              )}
+              <button
+                onClick={() => handleDownload("txt")}
+                className="px-5 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-100 transition text-slate-700 font-medium"
+              >
+                📥 TXT
+              </button>
+              <button
+                onClick={() => handleDownload("pdf")}
+                className="px-5 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-100 transition text-slate-700 font-medium"
+              >
+                📄 PDF
+              </button>
+            </>
+          )}
+
           <button
             onClick={() => {
               setLink("");
               setText("");
               setSummary(null);
               setError(null);
+              setFile(null);
               setFileName(null);
+              handleStopTTS(); 
             }}
             className="px-5 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-100 transition text-slate-700 font-medium"
           >
@@ -209,9 +294,4 @@ function OptionButton({
       {children}
     </button>
   );
-}
-
-function truncate(s: string, max = 120) {
-  if (!s) return "—";
-  return s.length > max ? s.slice(0, max) + "…" : s;
 }
