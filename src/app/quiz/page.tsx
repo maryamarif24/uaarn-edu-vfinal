@@ -17,8 +17,7 @@ export default function QuizPage() {
   const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
 
-    const BACKEND_URL = "http://127.0.0.1:8000";
-
+  const BACKEND_URL = "http://127.0.0.1:8000"; // ✅ no /api prefix
 
   const handleSend = async () => {
     if (!topic.trim()) return;
@@ -28,29 +27,29 @@ export default function QuizPage() {
     setTopic("");
     setLoading(true);
 
+
     try {
-      const res = await fetch(`${BACKEND_URL}/api/quiz`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ topic }),
-});
+      const res = await fetch(`${BACKEND_URL}/quiz`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic }),
+      });
+
+
+      if (!res.ok) {
+        throw new Error(`Backend error: ${res.status}`);
+      }
 
       const data = await res.json();
 
-      let quizData: Quiz[] = [];
-
-      try {
-        quizData = JSON.parse(data.quiz);
-      } catch (err) {
-        console.error("Invalid JSON from backend:", err);
-        throw new Error("Invalid JSON format from AI");
-      }
+      // ✅ Backend already returns a proper JSON array
+      const quizData: Quiz[] = data.quiz;
 
       const aiMsg = { role: "ai" as const, content: quizData };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (error) {
       console.error("Error fetching quiz:", error);
-      alert(" Error generating quiz. Check backend logs.");
+      alert("❌ Error generating quiz. Check backend logs.");
     } finally {
       setLoading(false);
     }
@@ -100,38 +99,29 @@ export default function QuizPage() {
                   msg.content
                 ) : (
                   <div className="space-y-4">
-                    {msg.content.map(
-                      (
-                        q: {
-                          question: string;
-                          options: string[];
-                          answer: string;
-                        },
-                        idx: number
-                      ) => (
-                        <div
-                          key={idx}
-                          className="border border-slate-200 rounded-xl p-4 bg-white"
-                        >
-                          <h3 className="font-medium text-slate-800 mb-2">
-                            {idx + 1}. {q.question}
-                          </h3>
-                          <ul className="space-y-1">
-                            {q.options.map((opt, i) => (
-                              <li
-                                key={i}
-                                className="px-3 py-2 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer text-slate-700 text-sm"
-                              >
-                                {opt}
-                              </li>
-                            ))}
-                          </ul>
-                          <p className="text-xs text-slate-500 mt-2">
-                            ✅ Correct Answer: <b>{q.answer}</b>
-                          </p>
-                        </div>
-                      )
-                    )}
+                    {msg.content.map((q, idx) => (
+                      <div
+                        key={idx}
+                        className="border border-slate-200 rounded-xl p-4 bg-white"
+                      >
+                        <h3 className="font-medium text-slate-800 mb-2">
+                          {idx + 1}. {q.question}
+                        </h3>
+                        <ul className="space-y-1">
+                          {q.options.map((opt, i) => (
+                            <li
+                              key={i}
+                              className="px-3 py-2 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer text-slate-700 text-sm"
+                            >
+                              {opt}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="text-xs text-slate-500 mt-2">
+                          ✅ Correct Answer: <b>{q.answer}</b>
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
