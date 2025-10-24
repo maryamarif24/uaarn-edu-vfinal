@@ -11,13 +11,13 @@ export default function QuizPage() {
 
   type Message =
     | { role: "user"; content: string }
-    | { role: "ai"; content: Quiz[] };
+    | { role: "ai"; content: Quiz[] | string };
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const BACKEND_URL = "http://127.0.0.1:8000"; // ✅ no /api prefix
+  const BACKEND_URL = "http://127.0.0.1:8000"; // ✅ backend running locally
 
   const handleSend = async () => {
     if (!topic.trim()) return;
@@ -27,7 +27,6 @@ export default function QuizPage() {
     setTopic("");
     setLoading(true);
 
-
     try {
       const res = await fetch(`${BACKEND_URL}/quiz`, {
         method: "POST",
@@ -35,18 +34,53 @@ export default function QuizPage() {
         body: JSON.stringify({ topic }),
       });
 
-
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
         throw new Error(`Backend error: ${res.status}`);
       }
 
-      const data = await res.json();
+      // Create a reader to process the stream
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-      // ✅ Backend already returns a proper JSON array
-      const quizData: Quiz[] = data.quiz;
+      setMessages((prev) => [
+        ...prev,
+        { role: "ai", content: "Generating quiz..." },
+      ]);
 
-      const aiMsg = { role: "ai" as const, content: quizData };
-      setMessages((prev) => [...prev, aiMsg]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // Update live text in the UI
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last.role === "ai") {
+            return [...prev.slice(0, -1), { ...last, content: buffer }];
+          }
+          return prev;
+        });
+      }
+
+      // Try parsing JSON once full text received
+      try {
+        const jsonStart = buffer.indexOf("[");
+        const jsonEnd = buffer.lastIndexOf("]");
+        const jsonString = buffer.slice(jsonStart, jsonEnd + 1);
+        const quizData: Quiz[] = JSON.parse(jsonString);
+
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "ai", content: quizData },
+        ]);
+      } catch (err) {
+        console.error("Parsing error:", err);
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "ai", content: "⚠️ Could not parse quiz JSON properly." },
+        ]);
+      }
     } catch (error) {
       console.error("Error fetching quiz:", error);
       alert("❌ Error generating quiz. Check backend logs.");
@@ -92,12 +126,12 @@ export default function QuizPage() {
                 className={`max-w-[85%] rounded-2xl text-sm leading-relaxed ${
                   msg.role === "user"
                     ? "bg-blue-600 text-white rounded-br-none px-4 py-3"
-                    : "bg-slate-100 text-slate-800 rounded-bl-none"
+                    : "bg-slate-100 text-slate-800 rounded-bl-none p-4"
                 }`}
               >
                 {msg.role === "user" ? (
                   msg.content
-                ) : (
+                ) : Array.isArray(msg.content) ? (
                   <div className="space-y-4">
                     {msg.content.map((q, idx) => (
                       <div
@@ -122,6 +156,10 @@ export default function QuizPage() {
                         </p>
                       </div>
                     ))}
+                  </div>
+                ) : (
+                  <div className="whitespace-pre-wrap text-slate-500">
+                    {msg.content}
                   </div>
                 )}
               </div>

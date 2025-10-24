@@ -11,10 +11,10 @@ export default function Navbar() {
   return (
     <nav className="flex items-center justify-between px-8 py-4 bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
       {/* Logo */}
-      <h1 className="text-2xl font-bold text-blue-600">UAARN</h1>
+      <a href="/" className="text-3xl font-bold text-blue-600">UAARN</a>
 
       {/* Desktop Menu */}
-      <div className="hidden md:flex items-center space-x-6 text-slate-700 font-medium">
+      <div className="hidden md:flex items-center space-x-6 text-slate-700 text-xl">
         <Link href="/" className="hover:text-blue-600 transition">Home</Link>
         <Link href="/about" className="hover:text-blue-600 transition">About</Link>
         <Link href="/courses" className="hover:text-blue-600 transition">Courses</Link>

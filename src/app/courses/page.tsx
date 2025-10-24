@@ -40,7 +40,7 @@ export default function CoursesPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-20 px-8">
+    <div className="min-h-screen bg-slate-100 py-20 px-8">
       <div className="max-w-6xl mx-auto text-center mb-12">
         <h2 className="text-4xl font-bold text-slate-900">
           Explore <span className="text-blue-600">Top Courses</span>

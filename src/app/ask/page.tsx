@@ -1,6 +1,9 @@
 "use client";
+
+
 import { useState } from "react";
 import { Send } from "lucide-react";
+import UpgradeButton from "../components/upgradeButton";
 
 export default function AskPage() {
   const [messages, setMessages] = useState<
@@ -68,9 +71,12 @@ export default function AskPage() {
       <div className="w-full max-w-5xl bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-[80vh]">
         <div className="border-b border-slate-200 px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-slate-800">Ask UAARN 🤖</h2>
-          <span className="text-sm text-slate-500">
-            Your AI Study Companion
-          </span>
+          <div>
+            <span className="text-sm text-slate-500 mr-4">
+              Your AI Study Companion
+            </span>
+            <UpgradeButton/>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">

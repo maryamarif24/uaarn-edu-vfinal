@@ -7,7 +7,7 @@ export default function SignUpPage() {
       <div>
         <SignUp
           path="/sign-up"
-          fallbackRedirectUrl="/role-seletion"   // ✅ redirect to role selection after sign-up
+          fallbackRedirectUrl="/role-selection"   // ✅ redirect to role selection after sign-up
           signInUrl="/sign-in"
         />
       </div>
