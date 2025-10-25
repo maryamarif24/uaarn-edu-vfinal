@@ -4,6 +4,7 @@ import FeatureCard from "./components/FeatureCard";
 import ContactPage from "./contact/page";
 import CoursesPage from "./courses/page";
 import AboutPage from "./about/page";
+import DarkCommunitySection from "./components/DarkCommunitySection";
 
 export default function HomePage() {
   return (
@@ -64,6 +65,7 @@ export default function HomePage() {
 
       <CoursesPage />
       <ContactPage />
+      <DarkCommunitySection />
 
     </div>
   );

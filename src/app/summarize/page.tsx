@@ -1,199 +1,297 @@
 "use client";
-import { useState } from "react";
-import { Send } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useUser, RedirectToSignIn } from "@clerk/nextjs";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function QuizPage() {
-  type Quiz = {
-    question: string;
-    options: string[];
-    answer: string;
-  };
+export default function SummarizePage() {
+  const { isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const prefilledLink = (searchParams?.get("link") ?? "") as string;
 
-  type Message =
-    | { role: "user"; content: string }
-    | { role: "ai"; content: Quiz[] | string };
-
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [topic, setTopic] = useState("");
+  const [source, setSource] = useState<"youtube" | "text" | "upload">("youtube");
+  const [link, setLink] = useState(prefilledLink);
+  const [text, setText] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const BACKEND_URL = "http://127.0.0.1:8000"; // ✅ backend running locally
+  const BACKEND_URL = "http://127.0.0.1:8000";
 
-  const handleSend = async () => {
-    if (!topic.trim()) return;
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push("/sign-in");
+    }
+  }, [isLoaded, isSignedIn, router]);
 
-    const userMsg = { role: "user" as const, content: topic };
-    setMessages((prev) => [...prev, userMsg]);
-    setTopic("");
-    setLoading(true);
+  useEffect(() => {
+    if (prefilledLink) {
+      setSource("youtube");
+      setLink(prefilledLink);
+    }
+  }, [prefilledLink]);
+
+  if (!isLoaded) return <div className="text-center mt-20 text-slate-500">Loading...</div>;
+  if (!isSignedIn) return <RedirectToSignIn />;
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setFile(f);
+    setFileName(f.name);
+  }
+
+  async function handleSummarize() {
+    setError(null);
+    setSummary(null);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/quiz`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic }),
-      });
+      setLoading(true);
+      let response;
 
-      if (!res.ok || !res.body) {
-        throw new Error(`Backend error: ${res.status}`);
-      }
-
-      // Create a reader to process the stream
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      setMessages((prev) => [
-        ...prev,
-        { role: "ai", content: "Generating quiz..." },
-      ]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        // Update live text in the UI
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (last.role === "ai") {
-            return [...prev.slice(0, -1), { ...last, content: buffer }];
-          }
-          return prev;
+      if (source === "youtube" || source === "text") {
+        const payload = {
+          source: source,
+          link: source === "youtube" ? link : null,
+          text: source === "text" ? text : null,
+        };
+        response = await fetch(`${BACKEND_URL}/summarize`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         });
       }
 
-      // Try parsing JSON once full text received
-      try {
-        const jsonStart = buffer.indexOf("[");
-        const jsonEnd = buffer.lastIndexOf("]");
-        const jsonString = buffer.slice(jsonStart, jsonEnd + 1);
-        const quizData: Quiz[] = JSON.parse(jsonString);
-
-        setMessages((prev) => [
-          ...prev.slice(0, -1),
-          { role: "ai", content: quizData },
-        ]);
-      } catch (err) {
-        console.error("Parsing error:", err);
-        setMessages((prev) => [
-          ...prev.slice(0, -1),
-          { role: "ai", content: "⚠️ Could not parse quiz JSON properly." },
-        ]);
+      if (source === "upload" && file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        response = await fetch(`${BACKEND_URL}/api/agent/upload`, {
+          method: "POST",
+          body: formData,
+        });
       }
-    } catch (error) {
-      console.error("Error fetching quiz:", error);
-      alert("❌ Error generating quiz. Check backend logs.");
+
+      if (!response) throw new Error("No response from server");
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Summarization failed");
+      }
+
+      const data = await response.json();
+      setSummary(data.output);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+  async function handleDownload(format: "txt" | "pdf") {
+    if (!summary) return;
+    const response = await fetch(`${BACKEND_URL}/api/agent/download/${format}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: summary }),
+    });
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `summary.${format}`;
+    a.click();
+  }
+
+  async function handleTTS() {
+    if (!summary) return;
+    const response = await fetch(`${BACKEND_URL}/api/agent/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: summary }),
+    });
+    const blob = await response.blob();
+    const audioUrl = URL.createObjectURL(blob);
+    const audio = new Audio(audioUrl);
+    audioRef.current = audio;
+    setIsPlaying(true);
+    audio.play();
+
+    audio.onended = () => {
+      setIsPlaying(false);
+      audioRef.current = null;
+    };
+  }
+
+  function handleStopTTS() {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+      setIsPlaying(false);
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 flex flex-col items-center py-10 px-4">
-      <div className="w-full max-w-5xl bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-[80vh]">
-        {/* Header */}
-        <div className="border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-slate-800">
-            Quiz Generator 🧠
-          </h2>
-          <span className="text-sm text-slate-500">AI Learning Assistant</span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-100 py-16 px-6">
+      <div className="max-w-4xl mx-auto bg-white/80 backdrop-blur-md border border-slate-200 shadow-lg rounded-2xl p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-4">
+            🎯 Summarize Your Lecture or Notes
+          </h1>
+          <p className="text-slate-600 text-sm max-w-2xl mx-auto">
+            Upload a transcript, paste notes, or share a YouTube lecture link — let AI generate a concise and clear summary for you.
+          </p>
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {messages.length === 0 && (
-            <p className="text-center text-slate-400 mt-10">
-              Type a topic to generate an AI quiz ✨
-            </p>
-          )}
+        <div className="flex flex-wrap justify-center gap-3 mb-6">
+          <OptionButton active={source === "youtube"} onClick={() => setSource("youtube")}>
+            🎥 YouTube Link
+          </OptionButton>
+          <OptionButton active={source === "upload"} onClick={() => setSource("upload")}>
+            📄 Upload File
+          </OptionButton>
+          <OptionButton active={source === "text"} onClick={() => setSource("text")}>
+            ✏️ Paste Text
+          </OptionButton>
+        </div>
 
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${
-                msg.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
+        <div className="mb-6 flex justify-center">
+          {source === "upload" ? (
+            <label className="block w-full max-w-3xl">
+              <input
+                type="file"
+                accept=".txt,.pdf,.docx"
+                onChange={handleFileChange}
+                className="hidden"
+                id="file-input"
+              />
               <div
-                className={`max-w-[85%] rounded-2xl text-sm leading-relaxed ${
-                  msg.role === "user"
-                    ? "bg-blue-600 text-white rounded-br-none px-4 py-3"
-                    : "bg-slate-100 text-slate-800 rounded-bl-none p-4"
-                }`}
+                onClick={() => document.getElementById("file-input")?.click()}
+                className="cursor-pointer bg-slate-100 hover:bg-slate-200 border border-slate-300 px-4 py-3 rounded-lg text-slate-700 transition text-center"
               >
-                {msg.role === "user" ? (
-                  msg.content
-                ) : Array.isArray(msg.content) ? (
-                  <div className="space-y-4">
-                    {msg.content.map((q, idx) => (
-                      <div
-                        key={idx}
-                        className="border border-slate-200 rounded-xl p-4 bg-white"
-                      >
-                        <h3 className="font-medium text-slate-800 mb-2">
-                          {idx + 1}. {q.question}
-                        </h3>
-                        <ul className="space-y-1">
-                          {q.options.map((opt, i) => (
-                            <li
-                              key={i}
-                              className="px-3 py-2 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer text-slate-700 text-sm"
-                            >
-                              {opt}
-                            </li>
-                          ))}
-                        </ul>
-                        <p className="text-xs text-slate-500 mt-2">
-                          ✅ Correct Answer: <b>{q.answer}</b>
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="whitespace-pre-wrap text-slate-500">
-                    {msg.content}
-                  </div>
-                )}
+                {fileName
+                  ? `✅ Selected: ${fileName}`
+                  : "📂 Click to upload transcript (PDF, DOCX, or TXT)"}
               </div>
-            </div>
-          ))}
-
-          {loading && (
-            <div className="flex justify-start">
-              <div className="bg-slate-100 text-slate-500 px-4 py-3 rounded-2xl rounded-bl-none text-sm animate-pulse">
-                Generating quiz...
-              </div>
-            </div>
+            </label>
+          ) : source === "text" ? (
+            <textarea
+              rows={6}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Paste your lecture transcript or notes here..."
+              className="w-full max-w-3xl mx-auto block p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 placeholder:text-slate-400"
+            />
+          ) : (
+            <input
+              type="url"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              placeholder="Paste your YouTube video link here..."
+              className="w-full max-w-3xl mx-auto block p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 placeholder:text-slate-400"
+            />
           )}
         </div>
 
-        {/* Input Area */}
-        <div className="border-t border-slate-200 px-6 py-4 flex items-center gap-3">
-          <input
-            type="text"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Enter a topic (e.g., Photosynthesis, JavaScript Basics)"
-            className="flex-1 p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800"
-          />
+        {error && (
+          <div className="text-red-600 text-sm mb-3 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
+            ⚠️ {error}
+          </div>
+        )}
+
+        <div className="flex items-center justify-center gap-3 flex-wrap">
           <button
-            onClick={handleSend}
+            onClick={handleSummarize}
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl transition disabled:opacity-50"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium disabled:opacity-50 transition"
           >
-            <Send size={18} />
+            {loading ? "Summarizing..." : "✨ Summarize"}
+          </button>
+
+          {summary && (
+            <>
+              {!isPlaying && (
+                <button
+                  onClick={handleTTS}
+                  className="px-5 py-2.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition font-medium"
+                >
+                  🔊 Listen
+                </button>
+              )}
+              {isPlaying && (
+                <button
+                  onClick={handleStopTTS}
+                  className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition font-medium"
+                >
+                  🛑 Stop
+                </button>
+              )}
+              <button
+                onClick={() => handleDownload("txt")}
+                className="px-5 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-100 transition text-slate-700 font-medium"
+              >
+                📥 TXT
+              </button>
+              <button
+                onClick={() => handleDownload("pdf")}
+                className="px-5 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-100 transition text-slate-700 font-medium"
+              >
+                📄 PDF
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={() => {
+              setLink("");
+              setText("");
+              setSummary(null);
+              setError(null);
+              setFile(null);
+              setFileName(null);
+              handleStopTTS(); 
+            }}
+            className="px-5 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-100 transition text-slate-700 font-medium"
+          >
+            Reset
           </button>
         </div>
+
+        {summary && (
+          <div className="mt-8 bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-6 shadow-inner">
+            <h3 className="font-semibold text-lg mb-3 text-slate-800">🧠 AI Summary</h3>
+            <div className="text-slate-700 text-sm leading-relaxed whitespace-pre-line">
+              {summary}
+            </div>
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+function OptionButton({
+  children,
+  active,
+  onClick,
+}: {
+  children: React.ReactNode;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 rounded-full border transition font-medium ${
+        active
+          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
