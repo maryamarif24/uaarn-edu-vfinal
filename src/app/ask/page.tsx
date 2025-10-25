@@ -12,7 +12,7 @@ export default function AskPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const BACKEND_URL = "http://127.0.0.1:8000";
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
 
   const USER_ID = "demo-user";
   const USER_NAME = ""; 
@@ -26,7 +26,7 @@ export default function AskPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/chat`, {
+      const res = await fetch(`${BACKEND_URL}/ask/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
