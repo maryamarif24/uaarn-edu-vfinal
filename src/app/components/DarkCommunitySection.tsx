@@ -28,8 +28,8 @@ const DarkCommunitySection: React.FC = () => {
                     <Image
                       src="/PFP-01.jpg"
                       alt=''
-                      width={70}
-                      height={70}
+                      width={50}
+                      height={50}
                       className='rounded-full'
                     />
                   </a>
@@ -37,8 +37,8 @@ const DarkCommunitySection: React.FC = () => {
                     <Image
                       src="/tahirah.jpg"
                       alt=''
-                      width={70}
-                      height={70}
+                      width={50}
+                      height={50}
                       className='rounded-full'
                     />
                   </a>
@@ -46,8 +46,8 @@ const DarkCommunitySection: React.FC = () => {
                     <Image
                       src="/mehak.jpg"
                       alt=''
-                      width={70}
-                      height={70}
+                      width={50}
+                      height={50}
                       className='rounded-full'
                     />
                   </a>
@@ -61,7 +61,7 @@ const DarkCommunitySection: React.FC = () => {
               <p className='text-5xl mt-5 font-extrabold text-black'>50+</p>
               <p>Registered Users</p>
             </div>
-            <div className='border bg-blue-600 px-5 py-2 mt-5 text-center text-2xl font-sans rounded-2xl text-white'>
+            <div className='border bg-blue-600 px-5 py-2 mt-5 text-center text-[1rem] font-sans rounded-2xl text-white'>
               <a href="/contact">
                 Register Yourself
               </a>
@@ -74,7 +74,7 @@ const DarkCommunitySection: React.FC = () => {
               <p className='text-5xl mt-5 font-extrabold text-black'>500+</p>
               <p>LinkedIn Followers</p>
             </div>
-            <div className='border bg-blue-600 px-5 py-2 mt-5 text-center text-2xl font-sans rounded-2xl text-white'>
+            <div className='border bg-blue-600 px-5 py-2 mt-5 text-center text-[1rem] font-sans rounded-2xl text-white'>
               <a href="https://www.linkedin.com/company/nexa-agent/" target='_blank'>
                 LinkedIn
               </a>

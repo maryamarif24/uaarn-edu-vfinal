@@ -5,10 +5,10 @@ import { X } from "lucide-react";
 
 export default function PlansModal({ onCloseAction }: { onCloseAction: () => void }) {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
-      <div className="bg-white rounded-2xl shadow-2xl px-10 py-10 w-[85%] max-w-6xl relative">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 pt-20">
+      <div className="bg-white rounded-2xl shadow-2xl px-10 py-8 w-[85%] max-w-6xl relative">
         {/* Title */}
-        <h2 className="text-4xl font-bold mb-12 text-center text-gray-800 font-sans">
+        <h2 className="text-3xl font-bold mb-8 text-center text-gray-800 font-sans">
           Choose Your Plan
         </h2>
 
@@ -19,8 +19,8 @@ export default function PlansModal({ onCloseAction }: { onCloseAction: () => voi
                           px-6 py-8 rounded-xl hover:scale-105 hover:border-blue-400 
                           hover:shadow-lg hover:bg-slate-50 transition-all duration-300">
             <div>
-              <h3 className="font-bold text-3xl font-serif mb-4 text-center">Starter Plan</h3>
-              <p className="mb-5 text-[1.1rem] text-green-500 text-center">
+              <h3 className="font-bold text-2xl font-serif mb-4 text-center">Starter Plan</h3>
+              <p className="mb-5 text-[1rem] text-green-500 text-center">
                 $99 one time – Ideal for individuals
               </p>
               <ul className="text-slate-700 text-sm leading-relaxed space-y-1">
@@ -46,8 +46,8 @@ export default function PlansModal({ onCloseAction }: { onCloseAction: () => voi
                           px-6 py-8 rounded-xl hover:scale-105 hover:border-purple-500 
                           hover:shadow-lg hover:bg-slate-50 transition-all duration-300">
             <div>
-              <h3 className="font-bold text-3xl font-serif mb-4 text-center">Pro Plan</h3>
-              <p className="mb-5 text-[1.1rem] text-green-500 text-center">
+              <h3 className="font-bold text-2xl font-serif mb-4 text-center">Pro Plan</h3>
+              <p className="mb-5 text-[1rem] text-green-500 text-center">
                 $199 one-time – For schools [portals/websites]
               </p>
               <ul className="text-slate-700 text-sm leading-relaxed space-y-1">
@@ -75,8 +75,8 @@ export default function PlansModal({ onCloseAction }: { onCloseAction: () => voi
                           px-6 py-8 rounded-xl hover:scale-105 hover:border-pink-500 
                           hover:shadow-lg hover:bg-slate-50 transition-all duration-300">
             <div>
-              <h3 className="font-bold text-3xl font-serif mb-4 text-center">Enterprise</h3>
-              <p className="mb-5 text-[1.1rem] text-green-500 text-center">
+              <h3 className="font-bold text-2xl font-serif mb-4 text-center">Enterprise</h3>
+              <p className="mb-5 text-[1rem] text-green-500 text-center">
                 Starts at $299 – For large institutions
               </p>
               <ul className="text-slate-700 text-sm leading-relaxed space-y-1">
