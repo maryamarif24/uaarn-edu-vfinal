@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
+import UpgradeButton from "./upgradeButton";
 
 export default function Navbar() {
   const { isSignedIn } = useUser();
@@ -11,16 +12,18 @@ export default function Navbar() {
   return (
     <nav className="flex items-center justify-between px-8 py-4 bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
       {/* Logo */}
-      <a href="/" className="text-3xl font-bold text-blue-600">UAARN</a>
+      <Link href="/" className="text-3xl font-bold text-blue-600">UAARN</Link>
 
       {/* Desktop Menu */}
       <div className="hidden md:flex items-center space-x-6 text-slate-700 text-xl">
         <Link href="/" className="hover:text-blue-600 transition">Home</Link>
         <Link href="/about" className="hover:text-blue-600 transition">About</Link>
         <Link href="/courses" className="hover:text-blue-600 transition">Courses</Link>
-        <Link href="/ask" className="hover:text-blue-600 transition">Ask AI</Link>
         <Link href="/contact" className="hover:text-blue-600 transition">Contact</Link>
-
+        <Link href="/role-selection" className="hover:text-blue-600 transition">Dashboard</Link>
+      </div>
+      <div className="flex gap-4">
+        <UpgradeButton />
         {isSignedIn ? (
           <div className="ml-4">
             <UserButton afterSignOutUrl="/" />

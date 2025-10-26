@@ -21,10 +21,10 @@ export default function HomePage() {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link
-            href="/ask"
+            href="/contact"
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition"
           >
-            Ask UAARN
+            Contact Sales
           </Link>
           <Link
             href="/about"

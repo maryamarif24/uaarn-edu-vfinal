@@ -72,11 +72,14 @@ export default function UploadNotes() {
       } else {
         throw new Error(result.error || "Failed to add note");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Upload failed:", error);
       Swal.fire({
         title: "❌ Upload Failed",
-        text: error.message || "Something went wrong. Please try again later.",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again later.",
         icon: "error",
         confirmButtonColor: "#2563eb",
       });

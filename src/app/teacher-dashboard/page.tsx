@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { BookOpen, FileUp, Brain } from "lucide-react";
+import { BookOpen, FileUp } from "lucide-react";
 import Link from "next/link";
 
 export default async function TeacherDashboard() {
@@ -68,23 +68,6 @@ export default async function TeacherDashboard() {
             </p>
             <span className="text-indigo-600 font-medium group-hover:underline">
               Upload Notes →
-            </span>
-          </Link>
-
-          {/* Generate Quiz Card */}
-          <Link
-            href="/quiz"
-            className="group bg-white border border-slate-200 rounded-xl p-6 shadow hover:shadow-lg transition block"
-          >
-            <Brain className="w-10 h-10 text-indigo-500 mb-3" />
-            <h2 className="text-lg font-semibold text-slate-800 mb-2">
-              Generate Quiz
-            </h2>
-            <p className="text-slate-500 mb-3">
-              Automatically create quizzes for your courses using AI.
-            </p>
-            <span className="text-indigo-600 font-medium group-hover:underline">
-              Generate Quiz →
             </span>
           </Link>
         </div>

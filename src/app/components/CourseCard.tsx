@@ -2,12 +2,19 @@
 import Image from "next/image";
 import Link from "next/link";
 
+interface SanityImage {
+  asset?: {
+    _ref?: string;
+  };
+}
+
 interface CourseCardProps {
   title: string;
   platform: string;
-  image?: any;
+  image?: string | SanityImage | null;
   link: string;
 }
+
 
 export default function CourseCard({ title, platform, image }: CourseCardProps) {
   let imageUrl = "/placeholder.png";
