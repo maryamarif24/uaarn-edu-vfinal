@@ -6,20 +6,22 @@ const isPublicRoute = createRouteMatcher([
   "/about",
   "/courses",
   "/contact",
-  "/sign-in",
-  "/sign-up",
+  "/sign-in(.*)",  // 👈 Allow all sign-in related routes
+  "/sign-up(.*)",  // 👈 Allow all sign-up related routes
   "/role-selection",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId, sessionClaims } = await auth(); // ✅ Await the promise properly
+  const { userId, sessionClaims } = await auth();
 
-  // ✅ Allow public routes
+  // ✅ Allow public routes without redirecting
   if (isPublicRoute(req)) return NextResponse.next();
 
-  // ✅ If not signed in → redirect
+  // ✅ If user not signed in → redirect to sign-in (once)
   if (!userId) {
-    return NextResponse.redirect(new URL("/sign-in", req.url));
+    const signInUrl = new URL("/sign-in", req.url);
+    signInUrl.searchParams.set("redirect_url", req.url); // optional: send back after login
+    return NextResponse.redirect(signInUrl);
   }
 
   // ✅ Role-based access control
