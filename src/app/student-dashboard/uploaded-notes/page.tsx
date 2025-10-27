@@ -9,6 +9,8 @@ type Note = {
   _id: string;
   title: string;
   fileUrl?: string;
+  description?: string;
+  createdAt: string;
 };
 
 export default function UploadedNotesPage() {
@@ -44,12 +46,6 @@ export default function UploadedNotesPage() {
           <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
             📘 Uploaded Notes
           </h1>
-          <button
-            onClick={() => router.push("/student-dashboard")}
-            className="bg-gradient-to-r from-slate-600 to-slate-700 text-white px-5 py-2.5 rounded-xl cursor-pointer shadow hover:shadow-md hover:from-slate-700 hover:to-slate-800 transition-all"
-          >
-            ← Back to Dashboard
-          </button>
         </div>
 
         {/* Notes Section */}
@@ -62,18 +58,31 @@ export default function UploadedNotesPage() {
             No notes available yet.
           </p>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
             {notes.map((note) => (
               <div
                 key={note._id}
-                className="group border border-slate-200 bg-white/80 rounded-2xl p-7 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                className="group border border-slate-200 bg-white/80 rounded-2xl p-7 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
               >
-                <h3 className="font-semibold text-xl text-slate-800 mb-7 group-hover:text-indigo-700 transition-colors">
-                  {note.title}
-                </h3>
+                {/* Top Section */}
+                <div>
+                  <h3 className="font-semibold text-xl text-slate-800 mb-3 group-hover:text-indigo-700 transition-colors">
+                    {note.title}
+                  </h3>
 
-                <div className="flex gap-3 mt-4">
-                  {/* View Button */}
+                  <p className="text-slate-600 text-sm leading-relaxed mb-5 line-clamp-3">
+                    {note.description
+                      ? note.description
+                      : "No description available."}
+                  </p>
+
+                  <p className="text-xs text-slate-500 italic">
+                    Uploaded on {note.createdAt.slice(0, 10)}
+                  </p>
+                </div>
+
+                {/* Buttons Section */}
+                <div className="flex gap-3 mt-6">
                   <a
                     href={note.fileUrl}
                     target="_blank"
@@ -82,7 +91,6 @@ export default function UploadedNotesPage() {
                     View
                   </a>
 
-                  {/* Download Button */}
                   <a
                     href={note.fileUrl}
                     download

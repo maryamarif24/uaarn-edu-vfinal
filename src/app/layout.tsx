@@ -10,6 +10,9 @@ import Footer from "./components/Footer";
 export const metadata: Metadata = {
   title: "UAARN - AI-Powered Education",
   description: "Your intelligent study companion",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

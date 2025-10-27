@@ -37,8 +37,6 @@ export default function Navbar() {
           ) : (
             <SignInButton
               mode="modal"
-              fallbackRedirectUrl="/role-selection"
-              forceRedirectUrl="/role-selection"
             >
               <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
                 Sign In
@@ -62,7 +60,6 @@ export default function Navbar() {
           <Link href="/" className="hover:text-blue-600" onClick={() => setOpen(false)}>Home</Link>
           <Link href="/about" className="hover:text-blue-600" onClick={() => setOpen(false)}>About</Link>
           <Link href="/courses" className="hover:text-blue-600" onClick={() => setOpen(false)}>Courses</Link>
-          <Link href="/ask" className="hover:text-blue-600" onClick={() => setOpen(false)}>Ask AI</Link>
           <Link href="/contact" className="hover:text-blue-600" onClick={() => setOpen(false)}>Contact</Link>
           <Link href="/role-selection" className="hover:text-blue-600" onClick={() => setOpen(false)}>Dashboard</Link>
 
@@ -80,8 +77,6 @@ export default function Navbar() {
             ) : (
               <SignInButton
                 mode="modal"
-                fallbackRedirectUrl="/role-selection"
-                forceRedirectUrl="/role-selection"
               >
                 <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
                   Sign In
