@@ -12,9 +12,12 @@ export default function Navbar() {
   return (
     <nav className="flex items-center justify-between px-6 md:px-10 py-4 bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
       {/* Logo */}
-      <Link href="/" className="text-3xl font-bold text-blue-600">
-        UAARN
-      </Link>
+      <div className="text-center">
+        <Link href="/" className="text-4xl font-bold text-blue-600">
+          UAARN
+        </Link>
+        <p className="font-sans text-[70%]">Universal Adaptive AI Resilience Network</p>
+      </div>
 
       {/* Desktop Menu */}
       <div className="hidden md:flex items-center space-x-6 text-slate-700 text-lg">
