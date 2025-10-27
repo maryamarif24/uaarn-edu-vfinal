@@ -33,7 +33,7 @@ const DarkCommunitySection: React.FC = () => {
             <div className="flex items-center justify-center gap-4 mt-5">
               <a href="https://github.com/maryamarif24">
                 <Image
-                  src="/PFP-01.jpg"
+                  src="/mrym.jpeg"
                   alt="Maryam"
                   width={50}
                   height={50}
@@ -42,7 +42,7 @@ const DarkCommunitySection: React.FC = () => {
               </a>
               <a href="https://github.com/TahirahWebDev">
                 <Image
-                  src="/tahirah.jpg"
+                  src="/tahira.jpg"
                   alt="Tahirah"
                   width={50}
                   height={50}
